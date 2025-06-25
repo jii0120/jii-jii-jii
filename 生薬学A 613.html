@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ランダム生薬クイズ</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .question { margin-bottom: 20px; }
+    .result { font-weight: bold; color: green; margin-top: 20px; }
+    input[type="text"] { width: 100%; padding: 5px; margin-top: 5px; }
+  </style>
+</head>
+<body>
+  <h1>生薬の学名・科名クイズ（順番ランダム・頻出Aのみ）thanks mst</h1>
+  <form id="quizForm"></form>
+  <button onclick="checkAnswers()">回答する</button>
+  <div class="result" id="result"></div>
+
+  <script>
+    // 生薬データ：必要に応じて追加できる
+    const herbs = [
+  { name: "アヘン", sci: "Papaver somniferum", fam: "ケシ科" },
+  { name: "アロエ", sci: "Aloe ferox", fam: "ユリ科" },
+  { name: "イチイ(タイヘイヨウイチイ)", sci: "Taxas brevifolia", fam: "イチイ科" },
+  { name: "イチイ(セイヨウイチイ)", sci: "Taxas baccata", fam: "イチイ科" },
+  { name: "ウイキョウ", sci: "Foeniculum vulgare", fam: "セリ科" },
+  { name: "ウワウルシ", sci: "Arctostaphylos uva-ursi", fam: "ツツジ科" },
+  { name: "オウギ", sci: "Astragalus membranaceus", fam: "マメ科" },
+  { name: "オウゴン", sci: "Scutellaria baicalensis", fam: "シソ科" },
+  { name: "オウバク", sci: "Phellodendron amurense", fam: "ミカン科" },
+  { name: "オウレン", sci: "Coptis japonica", fam: "キンポウゲ科" },
+  { name: "オンジ", sci: "Polygala tenuifolia", fam: "ヒメハギ科" },
+  { name: "カッコン", sci: "Pueraria lobata", fam: "マメ科" },
+  { name: "カンキョウ", sci: "Zingiber officinale", fam: "ショウガ科" },
+  { name: "カンゾウ", sci: "Glycyrrhiza uralensis", fam: "マメ科" },
+  { name: "キキョウ", sci: "Platycodon grandiflorus", fam: "キキョウ科" },
+  { name: "キジュ", sci: "Camptotheca acuminata", fam: "ヌマミズキ科" },
+  { name: "キナ", sci: "Cinchona succirubra", fam: "アカネ科" },
+  { name: "キョウニン", sci: "Prunus armeniaca", fam: "バラ科" },
+  { name: "ケイヒ", sci: "Cinnamomum cassia", fam: "クスノキ科" },
+  { name: "ケツメイシ", sci: "Cassia obtusifolia", fam: "マメ科" },
+  { name: "ゲンチアナ", sci: "Gentiana lutea", fam: "リンドウ科" },
+  { name: "コウカ", sci: "Carthamus tinctorius", fam: "キク科" },
+  { name: "サイコ", sci: "Bupleurum falcatum", fam: "セリ科" },
+  { name: "サンシシ", sci: "Gardenia jasminoides", fam: "アカネ科" },
+  { name: "サンシュユ", sci: "Cornus officinalis", fam: "ミズキ科" },
+  { name: "サンショウ", sci: "Zanthoxylum piperitum", fam: "ミカン科" },
+  { name: "ジギタリス", sci: "Digitalis purpurea", fam: "ゴマノハグサ科" },
+  { name: "ケジギタリス", sci: "Digitalis lanata", fam: "ゴマノハグサ科" },
+  { name: "シャクヤク", sci: "Paeonia lactiflora", fam: "ボタン科" },
+  { name: "ショウキョウ", sci: "Zingiber officinale", fam: "ショウガ科" },
+  { name: "セネガ", sci: "Polygala senega", fam: "ヒメハギ科" },
+  { name: "センキュウ", sci: "Cnidium officinale", fam: "セリ科" },
+  { name: "センナ", sci: "Cassia angustifolia", fam: "マメ科" },
+  { name: "ソウジュツ", sci: "Atractylodes lancea", fam: "キク科" },
+  { name: "ダイオウ", sci: "Rheum palmatum", fam: "タデ科" },
+  { name: "タイソウ", sci: "Ziziphus jujuba", fam: "クロウメモドキ科" },
+  { name: "チョウトウコウ", sci: "Uncaria rhynchophylla", fam: "アカネ科" },
+  { name: "チョウジ", sci: "Syzygium aromaticum", fam: "フトモモ科" },
+  { name: "チョレイ", sci: "Polyporus umbellatus", fam: "サルノコシカケ科" },
+  { name: "トウキ", sci: "Angelica acutiloba", fam: "セリ科" },
+  { name: "トウヒ", sci: "Citrus aurantium", fam: "ミカン科" },
+  { name: "ニンジン", sci: "Panax ginseng", fam: "ウコギ科" },
+  { name: "ハッカ", sci: "Mentha arvensis", fam: "シソ科" },
+  { name: "ハンゲ", sci: "Pinellia ternata", fam: "サトイモ科" },
+  { name: "ビャクジュツ", sci: "Atractylodes japonica", fam: "キク科" },
+  { name: "ブクリョウ", sci: "Wolfiporia cocos", fam: "サルノコシカケ科" },
+  { name: "ブシ", sci: "Aconitum carmichaeli", fam: "キンポウゲ科" },
+  { name: "ベラドンナコン", sci: "Atropa belladonna", fam: "ナス科" },
+  { name: "ボタンピ", sci: "Paeonia suffruticosa", fam: "ボタン科" },
+  { name: "マオウ", sci: "Ephedra sinica", fam: "マオウ科" },
+  { name: "リュウタン", sci: "Gentiana scabra", fam: "リンドウ科" },
+  { name: "ロートコン", sci: "Scopolia japonica", fam: "ナス科" }
+         ];
+
+    // ランダムに並び替える関数
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    const shuffledHerbs = shuffle([...herbs]).slice(0, 10); // ランダムに10個並べる
+
+    const quizForm = document.getElementById("quizForm");
+    shuffledHerbs.forEach((herb, index) => {
+      const qDiv = document.createElement("div");
+      qDiv.className = "question";
+      qDiv.innerHTML = `
+        <p>Q${index + 1}. 生薬名：「${herb.name}」</p>
+        <label>学名：</label>
+        <input type="text" id="sci${index}">
+        <label>科名：</label>
+        <input type="text" id="fam${index}">
+      `;
+      quizForm.appendChild(qDiv);
+    });
+
+    function checkAnswers() {
+      let score = 0;
+      let feedback = "";
+
+      shuffledHerbs.forEach((herb, index) => {
+        const userSci = document.getElementById(`sci${index}`).value.trim().toLowerCase();
+        const userFam = document.getElementById(`fam${index}`).value.trim();
+
+        const isSciCorrect = userSci === herb.sci.toLowerCase();
+        const isFamCorrect = userFam === herb.fam;
+
+        feedback += `
+  <p>
+    Q${index + 1}（${herb.name}）:<br>
+    学名：${isSciCorrect ? "✅ 正解" : `❌ 不正解（正解: ${herb.sci}）`}<br>
+    科名：${isFamCorrect ? "✅ 正解" : `❌ 不正解（正解: ${herb.fam}）`}
+  </p>
+`;  //なんでーうまくーいかないのー
+         
+
+        if (isSciCorrect) score++;
+        if (isFamCorrect) score++;
+      });
+
+      feedback += `<p>合計スコア: ${score} / ${shuffledHerbs.length * 2}</p>`;
+      document.getElementById("result").innerHTML = feedback;
+    }
+  </script>
+</body>
+</html>
